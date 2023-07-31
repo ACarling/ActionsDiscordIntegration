@@ -1,0 +1,76 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+# This is a sample workflow that tests a python project and pings webhooks with information
+
+
+name: Lint and Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+
+# Setup
+    - name: Set current date as env variable
+      run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+
+
+
+# Python tests
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install -r requirements.txt
+
+    - name: Lint for errors
+      run: |
+        flake8 . --select=E9,E7,F63,F7,F82 --show-source
+
+        if flake8 . --max-complexity=10 --max-line-length=127; then echo "LINT_FAIL=false" >> $GITHUB_ENV; else echo "LINT_FAIL=true" >> $GITHUB_ENV; fi
+
+    - name: Test with pytest
+      run: |
+        pytest -v
+
+
+# Discord bot integration
+    # - name: Sucess webhook
+    #   if: ${{ success() && env.LINT_FAIL == 'false' }}
+    #   uses: distributhor/workflow-webhook@v1
+    #   env:
+    #     webhook_url: http://serverhostname/success
+    #     webhook_secret: <webhook secret here>
+    #     data: '{"actor": "${{ github.actor }}", "runNumber": "${{github.run_number}}", "datetime": "${{ env.NOW }}" }'
+
+    - name: Warning webhook
+      if: ${{ success() && env.LINT_FAIL == 'true' }}
+      uses: distributhor/workflow-webhook@v1
+      env:
+        webhook_url: http://serverhostname/warn
+        webhook_secret: <webhook secret here>
+        data: '{"actor": "${{ github.actor }}", "runNumber": "${{github.run_number}}", "datetime": "${{ env.NOW }}" }'
+
+    - name: Falure webhook
+      if: ${{ failure() }}
+      uses: distributhor/workflow-webhook@v1
+      env:
+        webhook_url: http://serverhostname/fail
+        webhook_secret: <webhook secret here>
+        data: '{"actor": "${{ github.actor }}", "runNumber": "${{github.run_number}}", "datetime": "${{ env.NOW }}" }'
