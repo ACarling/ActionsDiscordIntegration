@@ -30,7 +30,7 @@ BOT.once('ready', () => {
     EXPRESS.use((req, res, next) => {
         var date
         if(req.body.data.datetime) {
-            date = new Date(req.body.data.datetime + "Z").toLocaleString('en-AU', {timeZone: 'Australia/Adelaide'});
+            date = new Date(req.body.data.datetime + "Z");
             req.body.data.date = date;
         }
         console.log(`Recieved request time: ${date}`);
