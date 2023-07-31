@@ -7,7 +7,7 @@ var bodyParser = require('body-parser');
 
 const PORT = parseInt(process.env.PORT)
 const CHANNEL_ID = process.env.CHANNEL_ID // discord server channel id
-const CLIENT = new Client()
+const BOT = new Client()
 var gitChannel;
 
 
@@ -18,13 +18,13 @@ EXPRESS.use(bodyParser.urlencoded({
 }));
 EXPRESS.use(bodyParser.json());
 
-CLIENT.login(process.env.CLIENT_TOKEN)
+BOT.login(process.env.CLIENT_TOKEN)
 
 
 
-CLIENT.once('ready', () => {
-    console.log(`Logged in as ${CLIENT.user.tag}`);
-    gitChannel = CLIENT.channels.cache.get(CHANNEL_ID);
+BOT.once('ready', () => {
+    console.log(`Logged in as ${BOT.user.tag}`);
+    gitChannel = BOT.channels.cache.get(CHANNEL_ID);
 
     // log
     EXPRESS.use((req, res, next) => {
@@ -73,13 +73,13 @@ CLIENT.once('ready', () => {
 
 process.on('beforeExit', () => {
     // Log out the bot before the process exits
-    CLIENT.destroy()
+    BOT.destroy()
       .then(() => console.log('Bot logged out gracefully'))
       .catch(console.error);
 });
 process.on('exit', () => {
     // Log out the bot before the process exits
-    CLIENT.destroy()
+    BOT.destroy()
       .then(() => console.log('Bot logged out gracefully'))
       .catch(console.error);
 });
